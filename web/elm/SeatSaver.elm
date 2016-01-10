@@ -2,5 +2,13 @@ module SeatSaver where
 
 import Html
 
+main : Html.Html
 main =
-  Html.text "Hello, nurse! This is elm-nurse!!"
+  view
+
+
+-- VIEW
+
+view : Html.Html
+view =
+  Html.text "Wooohoo!! I'm in elm view!"
