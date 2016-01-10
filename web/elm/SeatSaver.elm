@@ -7,6 +7,8 @@ import Html.Events exposing (onClick)
 import StartApp
 import Effects exposing (Effects, Never)
 import Task exposing (Task)
+import Json.Decode as Json exposing ((:=))
+import Http
 
 app =
   StartApp.start
@@ -52,27 +54,11 @@ type alias Model =
 
 init : (Model, Effects Action)
 init =
-    let
-        seats =
-          [ { seatNo = 1, occupied = False }
-          , { seatNo = 2, occupied = False }
-          , { seatNo = 3, occupied = False }
-          , { seatNo = 4, occupied = False }
-          , { seatNo = 5, occupied = False }
-          , { seatNo = 6, occupied = False }
-          , { seatNo = 7, occupied = False }
-          , { seatNo = 8, occupied = False }
-          , { seatNo = 9, occupied = False }
-          , { seatNo = 10, occupied = False }
-          , { seatNo = 11, occupied = False }
-          , { seatNo = 12, occupied = False }
-          ]
-    in
-      (seats, Effects.none)
+    ([], fetchSeats)
 
 -- UPDATE
 
-type Action = Toggle Seat
+type Action = Toggle Seat | SetSeats (Maybe Model)
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
@@ -86,3 +72,31 @@ update action model =
               model
       in
           (List.map updateSeat model, Effects.none)
+
+    SetSeats seats ->
+      let
+          newModel = Maybe.withDefault model seats
+      in
+          (newModel, Effects.none)
+
+
+-- EFFECTS
+
+fetchSeats : Effects Action
+fetchSeats =
+  Http.get decodeSets "http://localhost:4000/api/seats"
+    |> Task.toMaybe
+    |> Task.map SetSeats
+    |> Effects.task
+
+decodeSets : Json.Decoder Model
+decodeSets =
+  let
+      seat =
+        Json.object2 (\seatNo occupied -> (Seat seatNo occupied))
+        ("seatNo" := Json.int)
+        ("occupied" := Json.bool)
+
+  in
+      Json.at ["data"] (Json.list seat)
+
