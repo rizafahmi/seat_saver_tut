@@ -44,3 +44,20 @@ init =
   , { seatNo = 11, occupied = False }
   , { seatNo = 12, occupied = False }
   ]
+
+-- UPDATE
+
+type Action = Toggle Seat
+
+update : Action -> Model -> Model
+update action model =
+  case action of
+    Toggle seatToToggle ->
+      let
+          updateSeat model =
+            if model.seatNo == seatToToggle.seatNo then
+              { model | occupied = not model.occupied }
+            else
+              model
+      in
+          List.map updateSeat model
