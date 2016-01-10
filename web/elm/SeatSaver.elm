@@ -2,21 +2,27 @@ module SeatSaver where
 
 import Html exposing (Html, ul, li, text)
 import Html.Attributes exposing (class)
+import StartApp.Simple
+import Html.Events exposing (onClick)
 
-main : Html
+main : Signal Html
 main =
-  view init
+  StartApp.Simple.start
+    { model = init
+    , update = update
+    , view = view
+    }
 
 
 -- VIEW
 
-view : Model -> Html
-view model =
-  ul [ class "seats" ] (List.map seatItem model)
+view : Signal.Address Action -> Model -> Html
+view address model =
+  ul [ class "seats" ] (List.map (seatItem address) model)
 
-seatItem : Seat -> Html
-seatItem seat =
-  li [ class "seat available" ] [ text (toString seat.seatNo) ]
+seatItem : Signal.Address Action -> Seat -> Html
+seatItem address seat =
+  li [ class "seat available", onClick address (Toggle seat) ] [ text (toString seat.seatNo) ]
 
 
 -- MODEL
@@ -44,3 +50,21 @@ init =
   , { seatNo = 11, occupied = False }
   , { seatNo = 12, occupied = False }
   ]
+
+
+-- UPDATE
+type Action = Toggle Seat
+
+update : Action -> Model -> Model
+update action model =
+  case action of
+    Toggle seatToToggle ->
+      let
+          updateSeat model =
+            if seatToToggle.seatNo == model.seatNo then
+              { model | occupied = (not model.occupied) }
+            else
+              model
+      in
+          List.map updateSeat model
+
